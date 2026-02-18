@@ -1,12 +1,7 @@
 // src/App.jsx
-import { useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { IPALProvider } from "./context/IPALContext";
-import {
-  requestNotificationPermission,
-  registerFCMToken,
-  onMessageListener,
-} from "./services/fcmService";
 
 // ⚡ Eager load - Always needed
 import Login from "./pages/Login";
@@ -28,58 +23,7 @@ const AccountInfo = lazy(() => import("./pages/AccountInfo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
-  // ⭐ FCM INITIALIZATION
-  useEffect(() => {
-    let unsubscribe = null;
-
-    const initFCM = async () => {
-      // Check if user is logged in
-      const token = localStorage.getItem("token");
-
-      if (token) {
-        console.log("🔔 Initializing FCM...");
-
-        try {
-          // Request notification permission & get FCM token
-          const result = await requestNotificationPermission();
-
-          if (result.success && result.token) {
-            console.log("✅ FCM Token obtained");
-
-            // Register token to backend
-            await registerFCMToken(result.token);
-
-            // Listen for foreground notifications (after successful init)
-            unsubscribe = onMessageListener((payload) => {
-              console.log("📬 Foreground notification received:", payload);
-
-              // Optional: Show toast notification in UI
-              // You can add react-toastify or custom notification here
-              alert(
-                `🔔 ${payload.notification.title}\n${payload.notification.body}`,
-              );
-            });
-          } else {
-            console.log("⚠️ FCM initialization skipped:", result.error);
-          }
-        } catch (error) {
-          console.error("❌ FCM initialization error:", error);
-        }
-      } else {
-        console.log("ℹ️ User not logged in, skipping FCM");
-      }
-    };
-
-    // Initialize FCM
-    initFCM();
-
-    // Cleanup: unsubscribe from message listener on unmount
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []); // Run once on mount
+  // ⭐ FCM sekarang diinisialisasi di DashboardLayout (hanya saat user sudah login)
 
   return (
     <IPALProvider>

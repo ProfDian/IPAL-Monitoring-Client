@@ -15,6 +15,7 @@ import {
 import sensorService from "../services/sensorServices";
 import { LoadingScreen } from "../components/ui";
 import { useIPAL } from "../context/IPALContext";
+import { getSensorTypeLabel, getSensorUnit } from "../utils/sensorHelpers";
 
 const Sensors = () => {
   // ⭐ USE IPAL CONTEXT - Dynamic IPAL ID
@@ -68,23 +69,7 @@ const Sensors = () => {
     return acc;
   }, {});
 
-  const getSensorTypeLabel = (type) => {
-    const labels = {
-      ph: "pH",
-      tds: "TDS",
-      temperature: "Temperature",
-    };
-    return labels[type] || type;
-  };
-
-  const getSensorUnit = (type) => {
-    const units = {
-      ph: "",
-      tds: "ppm",
-      temperature: "°C",
-    };
-    return units[type] || "";
-  };
+  // getSensorTypeLabel and getSensorUnit now imported from utils/sensorHelpers
 
   // ========================================
   // NEW: Status Badge with Pulse Animation

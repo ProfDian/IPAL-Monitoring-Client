@@ -6,14 +6,14 @@ import {
   Shield,
   ShieldCheck,
   Clock,
-  Check,
-  AlertTriangle,
   Edit3,
   X,
   Save,
 } from "lucide-react";
 import userService from "../services/userService";
 import { useAuth } from "../context/AuthContext";
+import { Toast, PageHeader, InlineLoader } from "../components/ui";
+import useToast from "../hooks/useToast";
 
 const AccountInfo = () => {
   const { user, setUser } = useAuth();
@@ -23,8 +23,7 @@ const AccountInfo = () => {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(user?.username || "");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const { success, error, setSuccess, setError } = useToast();
 
   // Fetch fresh profile data from API on mount
   useEffect(() => {
@@ -51,19 +50,7 @@ const AccountInfo = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-dismiss
-  useEffect(() => {
-    if (success) {
-      const t = setTimeout(() => setSuccess(null), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [success]);
-  useEffect(() => {
-    if (error) {
-      const t = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(t);
-    }
-  }, [error]);
+  // Auto-dismiss handled by useToast hook
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -127,9 +114,8 @@ const AccountInfo = () => {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto flex items-center justify-center py-20">
-        <div className="animate-spin w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full" />
-        <span className="ml-3 text-gray-500">Loading profile...</span>
+      <div className="max-w-2xl mx-auto">
+        <InlineLoader message="Loading profile..." />
       </div>
     );
   }
@@ -137,26 +123,14 @@ const AccountInfo = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Account Info</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          View and manage your account details
-        </p>
-      </div>
+      <PageHeader
+        title="Account Info"
+        subtitle="View and manage your account details"
+      />
 
       {/* Messages */}
-      {success && (
-        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-          <Check className="w-4 h-4" />
-          {success}
-        </div>
-      )}
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
-          <AlertTriangle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
+      <Toast type="success" message={success} onDismiss={() => setSuccess(null)} />
+      <Toast type="error" message={error} onDismiss={() => setError(null)} />
 
       {/* Profile Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

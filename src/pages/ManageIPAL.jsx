@@ -2,12 +2,9 @@
 import { useState, useEffect } from "react";
 import {
   Plus,
-  Edit3,
-  Trash2,
   MapPin,
   Activity,
   RefreshCw,
-  X,
   Check,
   AlertTriangle,
   Building2,
@@ -19,7 +16,16 @@ import ipalService from "../services/ipalService";
 import { getEntityStatusColor } from "../utils/statusConfig";
 import { useIPAL } from "../context/IPALContext";
 import { useAuth } from "../context/AuthContext";
-import { LoadingScreen } from "../components/ui";
+import {
+  LoadingScreen,
+  Toast,
+  PageHeader,
+  EmptyState,
+  ActionButton,
+} from "../components/ui";
+import FormModal, { FormModalFooter } from "../components/ui/FormModal";
+import ConfirmDeleteModal from "../components/ui/ConfirmDeleteModal";
+import useToast from "../hooks/useToast";
 
 const ManageIPAL = () => {
   const { user } = useAuth();
@@ -32,8 +38,7 @@ const ManageIPAL = () => {
   const [editingIpal, setEditingIpal] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const { success, error, setSuccess, setError } = useToast();
 
   // Form state
   const [form, setForm] = useState({
@@ -185,86 +190,53 @@ const ManageIPAL = () => {
     }
   };
 
-  // Auto-dismiss messages
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+  // Auto-dismiss handled by useToast hook
 
   if (loading) return <LoadingScreen message="Loading IPAL data..." />;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Manage IPAL</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Add, edit, or remove IPAL facilities
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={fetchIpals}
-            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-          >
-            <RefreshCw className="w-4 h-4 mr-1" />
-            Refresh
-          </button>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-            }}
-            className="inline-flex items-center px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 transition"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add IPAL
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Manage IPAL"
+        subtitle="Add, edit, or remove IPAL facilities"
+        actions={
+          <>
+            <button
+              onClick={fetchIpals}
+              className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Refresh
+            </button>
+            <button
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
+              className="inline-flex items-center px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 transition"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add IPAL
+            </button>
+          </>
+        }
+      />
 
       {/* Success message */}
-      {success && (
-        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-          <Check className="w-4 h-4" />
-          {success}
-        </div>
-      )}
+      <Toast type="success" message={success} onDismiss={() => setSuccess(null)} />
 
       {/* Error message */}
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
-          <AlertTriangle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
+      <Toast type="error" message={error} onDismiss={() => setError(null)} />
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b">
-              <h3 className="text-lg font-semibold">
-                {editingIpal ? "Edit IPAL" : "Add New IPAL"}
-              </h3>
-              <button
-                onClick={resetForm}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
+      <FormModal
+        isOpen={showForm}
+        onClose={resetForm}
+        title={editingIpal ? "Edit IPAL" : "Add New IPAL"}
+        maxWidth="max-w-lg"
+        scrollable
+      >
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -550,75 +522,32 @@ const ManageIPAL = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 text-sm bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50"
-                >
-                  {submitting ? "Saving..." : editingIpal ? "Update" : "Save"}
-                </button>
-              </div>
+              <FormModalFooter
+                onCancel={resetForm}
+                loading={submitting}
+                submitLabel={editingIpal ? "Update" : "Save"}
+              />
             </form>
-          </div>
-        </div>
-      )}
+      </FormModal>
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Delete IPAL</h3>
-                <p className="text-sm text-gray-500">
-                  This action cannot be undone
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-4">
-              Are you sure you want to delete{" "}
-              <strong>{deleteConfirm.ipal_location}</strong>? All associated
-              sensors will be deactivated.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm.ipal_id)}
-                disabled={submitting}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {submitting ? "Deleting..." : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => handleDelete(deleteConfirm.ipal_id)}
+        title="Delete IPAL"
+        entityName={deleteConfirm?.ipal_location}
+        description="All associated sensors will be deactivated."
+        loading={submitting}
+      />
 
       {/* IPAL List */}
       {ipals.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">No IPAL Found</h3>
-          <p className="text-sm text-gray-500 mt-1 mb-4">
-            Click &quot;Add IPAL&quot; to add a new IPAL facility
-          </p>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="No IPAL Found"
+          message='Click "Add IPAL" to add a new IPAL facility'
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {ipals.map((ipal) => (
@@ -683,21 +612,9 @@ const ManageIPAL = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(ipal)}
-                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-cyan-700 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 mr-1" />
-                    Edit
-                  </button>
+                  <ActionButton variant="edit" onClick={() => handleEdit(ipal)} />
                   {isSuperAdmin && (
-                    <button
-                      onClick={() => setDeleteConfirm(ipal)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                      Delete
-                    </button>
+                    <ActionButton variant="delete" onClick={() => setDeleteConfirm(ipal)} />
                   )}
                 </div>
               </div>

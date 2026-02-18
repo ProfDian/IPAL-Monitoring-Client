@@ -18,6 +18,7 @@ import {
 import sensorService from "../services/sensorServices";
 import LineChart from "../components/charts/LineChart";
 import { LoadingScreen } from "../components/ui";
+import { getSensorTypeLabel, getSensorUnit } from "../utils/sensorHelpers";
 
 const SensorDetail = () => {
   const { id } = useParams();
@@ -203,23 +204,7 @@ const SensorDetail = () => {
     URL.revokeObjectURL(url);
   };
 
-  const getSensorTypeLabel = (type) => {
-    const labels = {
-      ph: "pH",
-      tds: "TDS (Total Dissolved Solids)",
-      temperature: "Temperature",
-    };
-    return labels[type] || type;
-  };
-
-  const getSensorUnit = (type) => {
-    const units = {
-      ph: "",
-      tds: "ppm",
-      temperature: "°C",
-    };
-    return units[type] || "";
-  };
+  // getSensorTypeLabel and getSensorUnit imported from utils/sensorHelpers
 
   const getStatusBadge = (status) => {
     if (status === "active") {

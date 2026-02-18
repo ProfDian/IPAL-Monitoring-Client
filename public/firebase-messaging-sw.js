@@ -1,9 +1,9 @@
 // Service Worker for FCM (background notifications)
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js",
 );
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js",
 );
 
 // Firebase config (same as frontend)
@@ -27,14 +27,14 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log(
     "[firebase-messaging-sw.js] Received background message:",
-    payload
+    payload,
   );
 
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: "/vite.svg",
-    badge: "/vite.svg",
+    icon: "/LogoIPAL.png",
+    badge: "/LogoIPAL.png",
     tag: payload.data?.alert_id || "notification",
     data: payload.data,
   };
@@ -72,6 +72,6 @@ self.addEventListener("notificationclick", (event) => {
         if (clients.openWindow) {
           return clients.openWindow(targetUrl);
         }
-      })
+      }),
   );
 });

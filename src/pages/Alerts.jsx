@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { acknowledgeAlert, resolveAlert } from "../services/alertServices";
 import AlertGroupList from "../components/alerts/AlertGroupList";
 import { useAlertsData } from "../hooks/useQueryHooks";
-import { LoadingScreen } from "../components/ui";
+import { LoadingScreen, StatCard } from "../components/ui";
 import { useRealtimeAlerts } from "../hooks/useRealtimeAlerts";
 import { useAlertCount } from "../hooks/useAlertCount";
 import { useIPAL } from "../context/IPALContext";
@@ -218,61 +218,38 @@ const Alerts = () => {
 
       {/* Summary Cards - Real-time counts */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-4 flex items-center">
-          <div className="flex-shrink-0 rounded-full bg-blue-100 p-4">
-            <AlertTriangle className="h-7 w-7 text-blue-600" />
-          </div>
-          <div className="ml-4">
-            <h3 className="text-sm font-medium text-gray-500">Total Alerts</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {totalAlertCount || alerts.length}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">All time</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-4 flex items-center">
-          <div className="flex-shrink-0 rounded-full bg-orange-100 p-4">
-            <AlertTriangle className="h-7 w-7 text-orange-600" />
-          </div>
-          <div className="ml-4">
-            <h3 className="text-sm font-medium text-gray-500">Active Alerts</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {activeAlertCount ||
-                alerts.filter((a) => a.status === "active").length}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {isListening && <span className="text-green-600">● Live</span>}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-4 flex items-center">
-          <div className="flex-shrink-0 rounded-full bg-red-100 p-4">
-            <AlertTriangle className="h-7 w-7 text-red-600" />
-          </div>
-          <div className="ml-4">
-            <h3 className="text-sm font-medium text-gray-500">Critical</h3>
-            <p className="text-2xl font-bold text-red-900">
-              {criticalAlertCount ||
-                alerts.filter((a) => a.severity === "critical").length}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">Needs attention</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-4 flex items-center">
-          <div className="flex-shrink-0 rounded-full bg-green-100 p-4">
-            <CheckCircle className="h-7 w-7 text-green-600" />
-          </div>
-          <div className="ml-4">
-            <h3 className="text-sm font-medium text-gray-500">Resolved</h3>
-            <p className="text-2xl font-bold text-gray-900">{resolvedCount}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {isListening && <span className="text-green-600">● Live</span>}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          label="Total Alerts"
+          value={totalAlertCount || alerts.length}
+          icon={AlertTriangle}
+          color="blue"
+          subtitle="All time"
+        />
+        <StatCard
+          label="Active Alerts"
+          value={activeAlertCount || alerts.filter((a) => a.status === "active").length}
+          icon={AlertTriangle}
+          color="orange"
+          subtitle={
+            isListening ? <span className="text-green-600">● Live</span> : undefined
+          }
+        />
+        <StatCard
+          label="Critical"
+          value={criticalAlertCount || alerts.filter((a) => a.severity === "critical").length}
+          icon={AlertTriangle}
+          color="red"
+          subtitle="Needs attention"
+        />
+        <StatCard
+          label="Resolved"
+          value={resolvedCount}
+          icon={CheckCircle}
+          color="green"
+          subtitle={
+            isListening ? <span className="text-green-600">● Live</span> : undefined
+          }
+        />
       </div>
 
       {/* ⭐ Alert Group List - Using Real-time Data */}

@@ -2,12 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   Plus,
-  Edit3,
-  Trash2,
   RefreshCw,
-  X,
-  Check,
-  AlertTriangle,
   Cpu,
   Activity,
   Droplets,
@@ -17,7 +12,16 @@ import sensorService from "../services/sensorServices";
 import ipalService from "../services/ipalService";
 import { getEntityStatusColor } from "../utils/statusConfig";
 import { useAuth } from "../context/AuthContext";
-import { LoadingScreen } from "../components/ui";
+import {
+  LoadingScreen,
+  Toast,
+  PageHeader,
+  EmptyState,
+  ActionButton,
+} from "../components/ui";
+import FormModal, { FormModalFooter } from "../components/ui/FormModal";
+import ConfirmDeleteModal from "../components/ui/ConfirmDeleteModal";
+import useToast from "../hooks/useToast";
 
 const SENSOR_TYPES = [
   {
@@ -56,8 +60,7 @@ const ManageSensor = () => {
   const [editingSensor, setEditingSensor] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const { success, error, setSuccess, setError } = useToast();
   const [filterIpal, setFilterIpal] = useState("");
 
   // Form state
@@ -175,19 +178,7 @@ const ManageSensor = () => {
     }
   };
 
-  // Auto-dismiss
-  useEffect(() => {
-    if (success) {
-      const t = setTimeout(() => setSuccess(null), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [success]);
-  useEffect(() => {
-    if (error) {
-      const t = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(t);
-    }
-  }, [error]);
+  // Auto-dismiss handled by useToast hook
 
   const getSensorMeta = (type) =>
     SENSOR_TYPES.find((s) => s.value === type) || SENSOR_TYPES[0];
@@ -202,33 +193,31 @@ const ManageSensor = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Manage Sensors</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Add, edit, or remove sensors from IPAL facilities
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={fetchSensors}
-            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-          >
-            <RefreshCw className="w-4 h-4 mr-1" />
-            Refresh
-          </button>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-            }}
-            className="inline-flex items-center px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 transition"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Sensor
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Manage Sensors"
+        subtitle="Add, edit, or remove sensors from IPAL facilities"
+        actions={
+          <>
+            <button
+              onClick={fetchSensors}
+              className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Refresh
+            </button>
+            <button
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
+              className="inline-flex items-center px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 transition"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Sensor
+            </button>
+          </>
+        }
+      />
 
       {/* Filter */}
       <div className="flex items-center gap-3">
@@ -253,223 +242,160 @@ const ManageSensor = () => {
       </div>
 
       {/* Messages */}
-      {success && (
-        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-          <Check className="w-4 h-4" />
-          {success}
-        </div>
-      )}
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
-          <AlertTriangle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
+      <Toast
+        type="success"
+        message={success}
+        onDismiss={() => setSuccess(null)}
+      />
+      <Toast type="error" message={error} onDismiss={() => setError(null)} />
 
       {/* Create / Edit Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b">
-              <h3 className="text-lg font-semibold">
-                {editingSensor ? "Edit Sensor" : "Add New Sensor"}
-              </h3>
-              <button
-                onClick={resetForm}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              {!editingSensor ? (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      IPAL *
-                    </label>
-                    <select
-                      required
-                      value={form.ipal_id}
-                      onChange={(e) =>
-                        setForm({ ...form, ipal_id: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
-                    >
-                      <option value="">Select IPAL</option>
-                      {ipals.map((ipal) => (
-                        <option key={ipal.ipal_id} value={ipal.ipal_id}>
-                          {ipal.ipal_location} (ID: {ipal.ipal_id})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Sensor Type *
-                    </label>
-                    <select
-                      required
-                      value={form.sensor_type}
-                      onChange={(e) =>
-                        setForm({ ...form, sensor_type: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
-                    >
-                      <option value="">Select Type</option>
-                      {SENSOR_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Sensor Location *
-                    </label>
-                    <select
-                      required
-                      value={form.sensor_location}
-                      onChange={(e) =>
-                        setForm({ ...form, sensor_location: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
-                    >
-                      <option value="">Select Location</option>
-                      {SENSOR_LOCATIONS.map((l) => (
-                        <option key={l.value} value={l.value}>
-                          {l.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              ) : (
-                <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-                  <p>
-                    <strong>Sensor ID:</strong> {editingSensor.id}
-                  </p>
-                  <p>
-                    <strong>Type:</strong>{" "}
-                    {editingSensor.sensor_type?.toUpperCase()}
-                  </p>
-                  <p>
-                    <strong>Location:</strong> {editingSensor.sensor_location}
-                  </p>
-                  <p>
-                    <strong>IPAL:</strong> {getIpalName(editingSensor.ipal_id)}
-                  </p>
-                </div>
-              )}
+      <FormModal
+        isOpen={showForm}
+        onClose={resetForm}
+        title={editingSensor ? "Edit Sensor" : "Add New Sensor"}
+      >
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {!editingSensor ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  IPAL *
+                </label>
+                <select
+                  required
+                  value={form.ipal_id}
+                  onChange={(e) =>
+                    setForm({ ...form, ipal_id: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="">Select IPAL</option>
+                  {ipals.map((ipal) => (
+                    <option key={ipal.ipal_id} value={ipal.ipal_id}>
+                      {ipal.ipal_location} (ID: {ipal.ipal_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description {editingSensor ? "" : "(optional)"}
+                  Sensor Type *
                 </label>
-                <input
-                  type="text"
-                  value={form.sensor_description}
+                <select
+                  required
+                  value={form.sensor_type}
                   onChange={(e) =>
-                    setForm({ ...form, sensor_description: e.target.value })
+                    setForm({ ...form, sensor_type: e.target.value })
                   }
-                  placeholder="e.g. Primary inlet pH sensor"
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
-                />
+                >
+                  <option value="">Select Type</option>
+                  {SENSOR_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {editingSensor && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={form.status}
-                    onChange={(e) =>
-                      setForm({ ...form, status: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-3 border-t">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sensor Location *
+                </label>
+                <select
+                  required
+                  value={form.sensor_location}
+                  onChange={(e) =>
+                    setForm({ ...form, sensor_location: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 text-sm bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50"
-                >
-                  {submitting ? "Saving..." : editingSensor ? "Update" : "Save"}
-                </button>
+                  <option value="">Select Location</option>
+                  {SENSOR_LOCATIONS.map((l) => (
+                    <option key={l.value} value={l.value}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </form>
+            </>
+          ) : (
+            <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+              <p>
+                <strong>Sensor ID:</strong> {editingSensor.id}
+              </p>
+              <p>
+                <strong>Type:</strong>{" "}
+                {editingSensor.sensor_type?.toUpperCase()}
+              </p>
+              <p>
+                <strong>Location:</strong> {editingSensor.sensor_location}
+              </p>
+              <p>
+                <strong>IPAL:</strong> {getIpalName(editingSensor.ipal_id)}
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description {editingSensor ? "" : "(optional)"}
+            </label>
+            <input
+              type="text"
+              value={form.sensor_description}
+              onChange={(e) =>
+                setForm({ ...form, sensor_description: e.target.value })
+              }
+              placeholder="e.g. Primary inlet pH sensor"
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
+            />
           </div>
-        </div>
-      )}
+
+          {editingSensor && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+          )}
+
+          <FormModalFooter
+            onCancel={resetForm}
+            loading={submitting}
+            submitLabel={editingSensor ? "Update" : "Save"}
+          />
+        </form>
+      </FormModal>
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Delete Sensor</h3>
-                <p className="text-sm text-gray-500">
-                  This action cannot be undone
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-4">
-              Are you sure you want to delete sensor{" "}
-              <strong>{deleteConfirm.id}</strong>?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm.id)}
-                disabled={submitting}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {submitting ? "Deleting..." : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => handleDelete(deleteConfirm.id)}
+        title="Delete Sensor"
+        entityName={deleteConfirm?.id}
+        loading={submitting}
+      />
 
       {/* Sensor Grid */}
       {sensors.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Cpu className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">
-            No Sensors Found
-          </h3>
-          <p className="text-sm text-gray-500 mt-1 mb-4">
-            Click &quot;Add Sensor&quot; to register a new sensor
-          </p>
-        </div>
+        <EmptyState
+          icon={Cpu}
+          title="No Sensors Found"
+          message='Click "Add Sensor" to register a new sensor'
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sensors.map((sensor) => {
@@ -524,21 +450,15 @@ const ManageSensor = () => {
 
                 {/* Action buttons */}
                 <div className="flex justify-end gap-2 pt-2 border-t">
-                  <button
+                  <ActionButton
+                    variant="edit"
                     onClick={() => handleEdit(sensor)}
-                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-cyan-700 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 mr-1" />
-                    Edit
-                  </button>
+                  />
                   {isSuperAdmin && (
-                    <button
+                    <ActionButton
+                      variant="delete"
                       onClick={() => setDeleteConfirm(sensor)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                      Delete
-                    </button>
+                    />
                   )}
                 </div>
               </div>

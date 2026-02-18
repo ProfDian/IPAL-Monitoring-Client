@@ -7,7 +7,11 @@
 
 @layer base {
   html {
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 
   body {
@@ -28,7 +32,8 @@
     z-index: 0;
     pointer-events: none;
     opacity: 0.4;
-    background-image: radial-gradient(
+    background-image:
+      radial-gradient(
         circle at 20% 30%,
         rgba(147, 197, 253, 0.15) 0%,
         transparent 40%
@@ -83,7 +88,8 @@
     z-index: 0;
     pointer-events: none;
     opacity: 0.25;
-    background-image: radial-gradient(
+    background-image:
+      radial-gradient(
         circle at 15% 15%,
         rgba(191, 219, 254, 0.3) 1px,
         transparent 1px
@@ -123,10 +129,24 @@
         rgba(186, 230, 253, 0.27) 1px,
         transparent 1px
       );
-    background-size: 300px 300px, 250px 250px, 350px 350px, 280px 280px,
-      320px 320px, 290px 290px, 310px 310px, 270px 270px;
-    background-position: 0 0, 50px 50px, 100px 25px, 150px 75px, 25px 125px,
-      175px 150px, 75px 175px, 125px 100px;
+    background-size:
+      300px 300px,
+      250px 250px,
+      350px 350px,
+      280px 280px,
+      320px 320px,
+      290px 290px,
+      310px 310px,
+      270px 270px;
+    background-position:
+      0 0,
+      50px 50px,
+      100px 25px,
+      150px 75px,
+      25px 125px,
+      175px 150px,
+      75px 175px,
+      125px 100px;
     animation: drift 30s linear infinite;
   }
 
@@ -205,6 +225,21 @@
 
   .animate-fadeIn {
     animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
   }
 
   .animation-delay-2000 {

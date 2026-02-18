@@ -1,5 +1,4 @@
 // src/pages/Dashboard.jsx
-// 🔥 IMPROVED VERSION - Better Layout, Recommendations, Violations Display
 
 import { useState, useEffect, lazy, Suspense } from "react";
 import "leaflet/dist/leaflet.css";
@@ -865,7 +864,6 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* 🔥 IMPROVED LAYOUT: Map Smaller, Chart Larger */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Map Panel - 1/3 width on desktop */}
           <div className="lg:col-span-1 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/40 overflow-hidden hover:shadow-2xl transition-shadow duration-300 h-[400px]">
