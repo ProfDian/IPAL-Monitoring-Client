@@ -89,21 +89,38 @@ const reportService = {
       const token = localStorage.getItem("token");
 
       // ⚠️ IMPORTANT: Use direct backend URL, bypass Vite proxy for binary files
-      const BACKEND_URL =
+      const rawBackendUrl =
         import.meta.env.VITE_API_URL || "http://localhost:3000";
+      // ✅ FIX: Remove trailing slash to avoid double slash
+      const BACKEND_URL = rawBackendUrl.endsWith("/")
+        ? rawBackendUrl.slice(0, -1)
+        : rawBackendUrl;
       const url = `${BACKEND_URL}/api/reports/export?${queryParams}`;
 
       console.log("🔗 Download URL:", url);
+
+      // ✅ FIX: Use AbortController for timeout (Vercel serverless can be slow)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
       // Fetch file as blob
       const response = await fetch(url, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept:
+            format === "csv"
+              ? "text/csv"
+              : format === "excel"
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf",
         },
-        // ⚠️ CRITICAL: Disable any response transformation
+        mode: "cors",
         cache: "no-cache",
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       console.log("📡 Response status:", response.status);
       console.log("📡 Response headers:", {
@@ -124,6 +141,13 @@ const reportService = {
         if (contentType && contentType.includes("application/json")) {
           const error = await response.json();
           throw new Error(error.message || "Failed to download report");
+        }
+
+        // ✅ FIX: Handle CORS / network errors more gracefully
+        if (response.status === 0) {
+          throw new Error(
+            "Network error - possible CORS issue. Check backend CORS configuration.",
+          );
         }
 
         throw new Error(

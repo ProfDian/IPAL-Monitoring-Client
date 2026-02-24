@@ -27,7 +27,7 @@ const dashboardService = {
       console.log("✅ Dashboard summary fetched successfully");
       console.log(
         "   Latest reading:",
-        response.data.latest_reading?.timestamp
+        response.data.latest_reading?.timestamp,
       );
       console.log("   Active alerts:", response.data.active_alerts?.total || 0);
 
@@ -51,7 +51,7 @@ const dashboardService = {
       console.log("✅ Dashboard overview fetched successfully");
       console.log(
         "   Total IPALs:",
-        response.data.statistics?.total_ipals || 0
+        response.data.statistics?.total_ipals || 0,
       );
 
       return response.data;
@@ -115,7 +115,7 @@ const dashboardService = {
       }
 
       const response = await api.get(
-        `/api/dashboard/readings/${ipalId}?${params.toString()}`
+        `/api/dashboard/readings/${ipalId}?${params.toString()}`,
       );
 
       console.log("✅ Chart data fetched successfully");
@@ -124,7 +124,7 @@ const dashboardService = {
       console.log("   Date range:", response.date_range);
       console.log(
         "   Avg quality score:",
-        response.summary?.average_quality_score
+        response.summary?.average_quality_score,
       );
 
       return response;
@@ -151,7 +151,7 @@ const dashboardService = {
       console.log("   Options:", { limit, order });
 
       const response = await api.get(
-        `/api/sensors/readings?ipal_id=${ipalId}&limit=${limit}&order=${order}`
+        `/api/sensors/readings?ipal_id=${ipalId}&limit=${limit}&order=${order}`,
       );
 
       console.log("✅ Historical data fetched successfully");
@@ -174,7 +174,7 @@ const dashboardService = {
       console.log(`📊 Fetching latest reading for IPAL ${ipalId}...`);
 
       const response = await api.get(
-        `/api/sensors/readings?ipal_id=${ipalId}&limit=1&order=desc`
+        `/api/sensors/readings?ipal_id=${ipalId}&limit=1&order=desc`,
       );
 
       if (response.data && response.data.length > 0) {
@@ -201,7 +201,7 @@ const dashboardService = {
       console.log(`🚨 Fetching active alerts for IPAL ${ipalId}...`);
 
       const response = await api.get(
-        `/api/alerts?ipal_id=${ipalId}&status=active&limit=10`
+        `/api/alerts?ipal_id=${ipalId}&status=active&limit=10`,
       );
 
       console.log("✅ Active alerts fetched successfully");
