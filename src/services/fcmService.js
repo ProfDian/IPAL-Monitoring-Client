@@ -34,17 +34,24 @@ async function ensureServiceWorkerRegistered() {
   if (!("serviceWorker" in navigator)) return null;
 
   try {
-    // Check if already registered
-    const existing = await navigator.serviceWorker.getRegistration(
-      "/firebase-messaging-sw.js",
-    );
+    // getRegistration() takes a SCOPE url, not the script path
+    // scope "/" means: SW that controls the root of the site
+    const existing = await navigator.serviceWorker.getRegistration("/");
     if (existing) {
-      console.log("✅ SW already registered:", existing.scope);
+      console.log("✅ SW already registered, scope:", existing.scope);
+      // Wait until it's active (handles installing/waiting states)
+      if (existing.installing) {
+        await new Promise((resolve) => {
+          existing.installing.addEventListener("statechange", (e) => {
+            if (e.target.state === "activated") resolve();
+          });
+        });
+      }
       return existing;
     }
 
-    // Register fresh
-    console.log("🔄 Registering SW...");
+    // No SW at root scope — register fresh
+    console.log("🔄 Registering SW fresh...");
     const registration = await navigator.serviceWorker.register(
       "/firebase-messaging-sw.js",
       { scope: "/" },
