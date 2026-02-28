@@ -121,8 +121,10 @@ export async function requestNotificationPermission() {
  */
 export async function registerFCMToken(token) {
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    const authToken = localStorage.getItem("token"); // Your JWT token
+    // Strip trailing slash to avoid double slash in URL (Vercel env may have trailing slash)
+    const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const apiUrl = rawUrl.replace(/\/$/, "");
+    const authToken = localStorage.getItem("token");
 
     const response = await fetch(
       `${apiUrl}/api/notifications/register-device`,
