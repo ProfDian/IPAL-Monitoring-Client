@@ -376,8 +376,13 @@ const SensorDetail = () => {
                         Total Readings
                       </p>
                       <p className="text-lg font-semibold text-gray-900">
-                        {history.length}
+                        {sensor.readings_count ?? history.length}
                       </p>
+                      {sensor.readings_count > history.length && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          Menampilkan {history.length} terakhir
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,7 +424,8 @@ const SensorDetail = () => {
                 Statistical Analysis
               </h3>
               <span className="text-sm text-gray-500">
-                Based on {stats?.count || 0} readings
+                Based on {stats?.count || 0} of{" "}
+                {sensor?.readings_count ?? stats?.count ?? 0} readings
               </span>
             </div>
 
