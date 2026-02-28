@@ -115,16 +115,18 @@ const LineChart = ({
       const timeSpan = getDataTimeSpan(data);
       if (timeSpan > 24 * 60 * 60 * 1000) {
         // More than 1 day
-        return date.toLocaleDateString("en-US", {
+        return date.toLocaleDateString("id-ID", {
           day: "2-digit",
           month: "short",
+          timeZone: "Asia/Jakarta",
         });
       } else {
         // Same day, show time only
-        return date.toLocaleTimeString("en-US", {
+        return date.toLocaleTimeString("id-ID", {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
+          timeZone: "Asia/Jakarta",
         });
       }
     } catch (error) {
@@ -163,7 +165,7 @@ const LineChart = ({
     try {
       const date = new Date(label);
       if (!isNaN(date.getTime())) {
-        formattedTime = date.toLocaleString("en-US", {
+        formattedTime = date.toLocaleString("id-ID", {
           weekday: "short",
           year: "numeric",
           month: "short",
@@ -171,6 +173,7 @@ const LineChart = ({
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
+          timeZone: "Asia/Jakarta",
         });
       }
     } catch (error) {
