@@ -81,7 +81,7 @@ const QualityScoreChart = ({ data = [], height = 400 }) => {
           {item.has_violations && (
             <div className="mt-3 pt-2 border-t border-gray-200">
               <p className="text-xs font-semibold text-red-600 mb-1">
-                ⚠️ {item.alert_count} Violation(s)
+                ⚠️ {item.violations?.length || item.alert_count} Violation(s)
               </p>
               {item.violations && item.violations.length > 0 && (
                 <ul className="text-xs text-gray-600 space-y-1 ml-4">
