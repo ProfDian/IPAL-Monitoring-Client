@@ -77,33 +77,67 @@ const QualityScoreChart = ({ data = [], height = 400 }) => {
             </span>
           </div>
 
-          {/* Violations */}
-          {item.has_violations && (
+          {/* Pelanggaran Baku Mutu */}
+          {item.violations?.length > 0 && (
             <div className="mt-3 pt-2 border-t border-gray-200">
               <p className="text-xs font-semibold text-red-600 mb-1">
-                ⚠️ {item.violations?.length || item.alert_count} Violation(s)
+                🚨 {item.violations.length} Pelanggaran Baku Mutu
               </p>
-              {item.violations && item.violations.length > 0 && (
-                <ul className="text-xs text-gray-600 space-y-1 ml-4">
-                  {item.violations.slice(0, 3).map((v, idx) => (
-                    <li key={idx} className="list-disc">
-                      {v.parameter.toUpperCase()}: {v.value} (max: {v.threshold}
-                      )
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                {item.violations.slice(0, 3).map((v, idx) => (
+                  <li key={idx} className="list-disc">
+                    {v.parameter?.toUpperCase()}: {v.value} (
+                    {v.condition === "below_minimum" ? "min" : "max"}:{" "}
+                    {v.threshold})
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
-          {/* No Violations */}
-          {!item.has_violations && (
+          {/* Masalah Efektivitas IPAL */}
+          {item.effectiveness_issues?.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
-              <p className="text-xs text-green-600 font-semibold">
-                ✓ No violations
+              <p className="text-xs font-semibold text-amber-600 mb-1">
+                ⚡ {item.effectiveness_issues.length} Masalah Efektivitas
               </p>
+              <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                {item.effectiveness_issues.slice(0, 3).map((issue, idx) => (
+                  <li key={idx} className="list-disc">
+                    {issue.message?.replace(/_/g, " ") ||
+                      issue.type?.replace(/_/g, " ")}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
+
+          {/* Masalah Sensor */}
+          {item.sensor_faults?.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <p className="text-xs font-semibold text-purple-600 mb-1">
+                🔧 {item.sensor_faults.length} Masalah Sensor
+              </p>
+              <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                {item.sensor_faults.slice(0, 3).map((fault, idx) => (
+                  <li key={idx} className="list-disc">
+                    {fault.message || fault.type?.replace(/_/g, " ")}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Semua Normal */}
+          {!item.violations?.length &&
+            !item.effectiveness_issues?.length &&
+            !item.sensor_faults?.length && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <p className="text-xs text-green-600 font-semibold">
+                  ✓ Tidak ada masalah
+                </p>
+              </div>
+            )}
         </div>
       </div>
     );
