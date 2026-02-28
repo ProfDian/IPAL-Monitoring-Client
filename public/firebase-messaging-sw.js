@@ -1,10 +1,22 @@
 // Service Worker for FCM (background notifications)
+// v3 - force skipWaiting so new SW activates immediately
 importScripts(
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js",
 );
 importScripts(
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js",
 );
+
+// Force new SW to activate immediately without waiting for tabs to close
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// Production frontend URL — hardcoded, never use self.location.origin
+const FRONTEND_BASE_URL = "https://ipal-monitoring-teklingundip.vercel.app";
 
 // Firebase config (same as frontend)
 const firebaseConfig = {
@@ -48,33 +60,25 @@ self.addEventListener("notificationclick", (event) => {
 
   event.notification.close();
 
-  // Get the alert ID and click_action from notification data
   const alertId = event.notification.data?.alert_id;
-  const clickAction = event.notification.data?.click_action;
 
-  // Use click_action from payload (set by backend with correct FRONTEND_URL),
-  // fallback to self.location.origin only as last resort
-  const PRODUCTION_URL = "https://ipal-monitoring-teklingundip.vercel.app";
-  const baseUrl = clickAction
-    ? clickAction.replace(/\/alerts.*$/, "") // strip any existing path from click_action
-    : PRODUCTION_URL;
-
-  const targetUrl = `${baseUrl}/alerts?from=notification${
+  // ALWAYS use hardcoded production URL — never self.location.origin
+  // self.location.origin would be localhost if SW was registered from localhost
+  const targetUrl = `${FRONTEND_BASE_URL}/alerts?from=notification${
     alertId ? `&alert=${alertId}` : ""
   }`;
 
-  // Open alerts page with redirect parameter
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        // Check if there's already a window open
+        // If production tab already open, focus + navigate
         for (const client of clientList) {
-          if (client.url.includes(baseUrl) && "focus" in client) {
+          if (client.url.startsWith(FRONTEND_BASE_URL) && "focus" in client) {
             return client.focus().then(() => client.navigate(targetUrl));
           }
         }
-        // If no window is open, open a new one
+        // Otherwise open new tab
         if (clients.openWindow) {
           return clients.openWindow(targetUrl);
         }
