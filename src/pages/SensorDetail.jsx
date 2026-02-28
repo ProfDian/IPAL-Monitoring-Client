@@ -380,7 +380,7 @@ const SensorDetail = () => {
                       </p>
                       {sensor.readings_count > history.length && (
                         <p className="text-xs text-gray-400 mt-1">
-                          Menampilkan {history.length} terakhir
+                          {history.length}
                         </p>
                       )}
                     </div>
@@ -593,7 +593,7 @@ const SensorDetail = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {history.slice(0, 100).map((item, idx) => {
+                      {history.map((item, idx) => {
                         const thresholds = {
                           ph: { min: 6, max: 9 },
                           tds: { max: 4000 },
@@ -621,6 +621,7 @@ const SensorDetail = () => {
                                   {
                                     dateStyle: "medium",
                                     timeStyle: "short",
+                                    timeZone: "Asia/Jakarta",
                                   },
                                 )}
                               </div>
