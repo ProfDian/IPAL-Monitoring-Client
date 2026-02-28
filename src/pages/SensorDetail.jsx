@@ -34,6 +34,30 @@ const SensorDetail = () => {
     fetchSensorData();
   }, [id]);
 
+  // Re-fetch history when limit changes
+  useEffect(() => {
+    if (!sensor) return; // skip initial mount
+    fetchHistory(historyLimit);
+  }, [historyLimit]);
+
+  const fetchHistory = async (limit) => {
+    try {
+      const historyData = await sensorService.getSensorHistory(id, {
+        limit,
+      });
+      console.log(`🔍 History response (limit=${limit}):`, historyData);
+      const historyArray = historyData?.history || [];
+      setHistory(historyArray);
+
+      if (historyArray.length > 0) {
+        calculateStatistics(historyArray);
+      }
+    } catch (error) {
+      console.warn("No history available:", error);
+      setHistory([]);
+    }
+  };
+
   const fetchSensorData = async () => {
     try {
       setLoading(true);
@@ -545,7 +569,6 @@ const SensorDetail = () => {
                   value={historyLimit}
                   onChange={(e) => {
                     setHistoryLimit(Number(e.target.value));
-                    fetchSensorData();
                   }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
