@@ -48,11 +48,17 @@ self.addEventListener("notificationclick", (event) => {
 
   event.notification.close();
 
-  // Get the alert ID from notification data
+  // Get the alert ID and click_action from notification data
   const alertId = event.notification.data?.alert_id;
+  const clickAction = event.notification.data?.click_action;
 
-  // Build URL with redirect parameter
-  const baseUrl = self.location.origin;
+  // Use click_action from payload (set by backend with correct FRONTEND_URL),
+  // fallback to self.location.origin only as last resort
+  const PRODUCTION_URL = "https://ipal-monitoring-teklingundip.vercel.app";
+  const baseUrl = clickAction
+    ? clickAction.replace(/\/alerts.*$/, "") // strip any existing path from click_action
+    : PRODUCTION_URL;
+
   const targetUrl = `${baseUrl}/alerts?from=notification${
     alertId ? `&alert=${alertId}` : ""
   }`;
