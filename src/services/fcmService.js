@@ -27,6 +27,40 @@ const initMessaging = async () => {
 initMessaging();
 
 /**
+ * Ensure SW is registered and return the registration.
+ * Called before getToken so Firebase always has a valid SW.
+ */
+async function ensureServiceWorkerRegistered() {
+  if (!("serviceWorker" in navigator)) return null;
+
+  try {
+    // Check if already registered
+    const existing = await navigator.serviceWorker.getRegistration(
+      "/firebase-messaging-sw.js",
+    );
+    if (existing) {
+      console.log("✅ SW already registered:", existing.scope);
+      return existing;
+    }
+
+    // Register fresh
+    console.log("🔄 Registering SW...");
+    const registration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js",
+      { scope: "/" },
+    );
+
+    // Wait until SW is active
+    await navigator.serviceWorker.ready;
+    console.log("✅ SW registered & active:", registration.scope);
+    return registration;
+  } catch (err) {
+    console.error("❌ SW registration failed:", err);
+    return null;
+  }
+}
+
+/**
  * Request notification permission & get FCM token
  */
 export async function requestNotificationPermission() {
@@ -44,10 +78,19 @@ export async function requestNotificationPermission() {
     if (permission === "granted") {
       console.log("✅ Notification permission granted");
 
-      // Get FCM token
-      const token = await getToken(messaging, {
+      // Ensure SW is registered BEFORE calling getToken
+      // Without this, getToken fails when SW was previously unregistered
+      const swRegistration = await ensureServiceWorkerRegistered();
+
+      // Get FCM token, always passing the SW registration explicitly
+      const tokenOptions = {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      });
+      };
+      if (swRegistration) {
+        tokenOptions.serviceWorkerRegistration = swRegistration;
+      }
+
+      const token = await getToken(messaging, tokenOptions);
 
       if (token) {
         console.log("✅ FCM Token received:", token);
@@ -83,7 +126,7 @@ export async function registerFCMToken(token) {
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({ fcm_token: token }),
-      }
+      },
     );
 
     const data = await response.json();
