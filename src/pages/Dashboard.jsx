@@ -320,7 +320,7 @@ const Dashboard = () => {
   // Error State
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50/60 via-orange-50/50 to-cyan-50/40 p-4">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-red-50/60 via-orange-50/50 to-cyan-50/40 p-4">
         <div className="bg-white rounded-2xl shadow-xl border border-red-200 p-8 max-w-md w-full">
           <div className="text-center">
             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -343,7 +343,7 @@ const Dashboard = () => {
   // Empty State
   if (!dashboardData || !latestReading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-100 p-4">
+      <div className="min-h-full bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-100 p-4">
         <div className="max-w-4xl mx-auto mt-20">
           <div className="bg-white rounded-2xl shadow-xl border p-12 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -405,7 +405,7 @@ const Dashboard = () => {
 
   // Main Dashboard
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50">
+    <div className="min-h-full bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50">
       {/* Animated water background effect */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 -left-4 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -413,7 +413,7 @@ const Dashboard = () => {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="relative w-full space-y-6">
         {/* Enhanced Header with Water Theme */}
         <div className="relative group">
           {/* Glow effect */}
