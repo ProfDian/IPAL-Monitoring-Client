@@ -64,6 +64,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
+
+// Custom IPAL logo marker icon
+const ipalIcon = L.icon({
+  iconUrl: "/LogoIPAL.png",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+});
 // ⭐ MapUpdater Component - Outside Dashboard to avoid re-creation
 const MapUpdater = ({ location }) => {
   const map = useMap();
@@ -895,7 +903,7 @@ const Dashboard = () => {
                 {selectedPlace && (
                   <>
                     <MapUpdater location={locations[selectedPlace]} />{" "}
-                    <Marker position={locations[selectedPlace]}>
+                    <Marker position={locations[selectedPlace]} icon={ipalIcon}>
                       <Popup>
                         <div className="text-sm p-2">
                           <p className="font-bold capitalize text-gray-900 mb-1">
