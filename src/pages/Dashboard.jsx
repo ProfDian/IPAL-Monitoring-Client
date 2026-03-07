@@ -446,7 +446,7 @@ const Dashboard = () => {
                   <div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
                       <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        Water Quality Monitoring
+                        Water Treatment Quality Monitoring
                       </span>
                     </h1>
 
