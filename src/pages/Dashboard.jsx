@@ -353,12 +353,12 @@ const Dashboard = () => {
               No Data Available
             </h2>
             <p className="text-gray-600 mb-2 max-w-md mx-auto text-lg">
-              Belum ada data sensor dari{" "}
+              No Sensor Data Fromi{" "}
               <strong>{currentIpal?.ipal_location || "IPAL ini"}</strong>.
             </p>
             <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm">
-              Data akan muncul setelah ESP32 mengirim pembacaan pertama atau
-              setelah sensor mulai aktif.
+              Data will appear after the ESP32 sends the first reading or when
+              the sensors start operating.
             </p>
 
             {/* IPAL Info */}

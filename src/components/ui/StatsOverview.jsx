@@ -74,7 +74,7 @@ const StatsOverview = ({
 
             <div>
               <p className="text-xs sm:text-sm font-bold text-cyan-600 uppercase tracking-wider mb-1">
-                💧 Water Quality Score
+                💧 Water Treatment Quality Score
               </p>
               <div className="flex items-baseline space-x-2">
                 <p
