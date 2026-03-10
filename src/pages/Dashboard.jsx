@@ -1,6 +1,7 @@
 // src/pages/Dashboard.jsx
 
 import { useState, useEffect, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -22,6 +23,7 @@ import {
   Info,
   ShieldAlert,
   Lightbulb,
+  ExternalLink,
 } from "lucide-react";
 import { LoadingScreen } from "../components/ui";
 import { useIPAL } from "../context/IPALContext";
@@ -88,6 +90,8 @@ const MapUpdater = ({ location }) => {
 // Component to update map position when location changes (moved inside Dashboard to avoid lazy load issues)
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   // ⭐ USE IPAL CONTEXT - Dynamic IPAL ID
   const { currentIpalId, currentIpal, isLoading: isIpalLoading } = useIPAL();
 
@@ -141,7 +145,7 @@ const Dashboard = () => {
   } = useSensorReadings(
     {
       ipal_id: currentIpalId,
-      limit: 50,
+      limit: 24,
       order: "desc",
     },
     {
@@ -940,7 +944,7 @@ const Dashboard = () => {
                   </h3>
                   {selectedPlace && (
                     <p className="text-xs text-gray-600 mt-0.5">
-                      Last 24 readings
+                      Last {chartData.length} readings
                     </p>
                   )}
                 </div>
@@ -992,23 +996,34 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : chartData.length > 0 ? (
-                <div className="h-full">
-                  <Suspense
-                    fallback={
-                      <div className="h-full flex items-center justify-center">
-                        <div className="text-gray-500">Loading chart...</div>
-                      </div>
-                    }
-                  >
-                    <LineChart
-                      data={chartData}
-                      dataKey="value"
-                      name={currentParam.name}
-                      color={currentParam.color}
-                      unit={currentParam.unit}
-                      height={280}
-                    />
-                  </Suspense>
+                <div className="h-full flex flex-col">
+                  <div className="flex-1">
+                    <Suspense
+                      fallback={
+                        <div className="h-full flex items-center justify-center">
+                          <div className="text-gray-500">Loading chart...</div>
+                        </div>
+                      }
+                    >
+                      <LineChart
+                        data={chartData}
+                        dataKey="value"
+                        name={currentParam.name}
+                        color={currentParam.color}
+                        unit={currentParam.unit}
+                        height={260}
+                      />
+                    </Suspense>
+                  </div>
+                  <div className="px-1 pb-1 flex justify-end">
+                    <button
+                      onClick={() => navigate("/sensors")}
+                      className="flex items-center gap-1 text-xs font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
+                    >
+                      View sensor details
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
