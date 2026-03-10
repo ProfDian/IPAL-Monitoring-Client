@@ -9,7 +9,7 @@
  * const { latestReading, qualityScore, violations, isListening } = useRealtimeLatestReading(ipalId);
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   collection,
   query,
@@ -20,10 +20,13 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-export const useRealtimeLatestReading = (ipalId) => {
+export const useRealtimeLatestReading = (ipalId, { onNewData } = {}) => {
   const [latestReading, setLatestReading] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState(null);
+  const isFirstSnapshot = useRef(true);
+  const onNewDataRef = useRef(onNewData);
+  onNewDataRef.current = onNewData;
 
   useEffect(() => {
     if (!ipalId) {
@@ -32,8 +35,9 @@ export const useRealtimeLatestReading = (ipalId) => {
     }
 
     console.log(
-      `🔥 Starting Firestore listener for IPAL ${ipalId} latest reading...`
+      `🔥 Starting Firestore listener for IPAL ${ipalId} latest reading...`,
     );
+    isFirstSnapshot.current = true;
     setIsListening(true);
     setError(null);
 
@@ -44,7 +48,7 @@ export const useRealtimeLatestReading = (ipalId) => {
         collection(db, "water_quality_readings"),
         where("ipal_id", "==", parseInt(ipalId)),
         orderBy("timestamp", "desc"),
-        limit(1)
+        limit(1),
       );
 
       // Real-time listener
@@ -71,6 +75,13 @@ export const useRealtimeLatestReading = (ipalId) => {
                 data.fuzzy_analysis?.compliance?.violations?.length || 0,
             });
 
+            // Fire callback only on real-time updates, not initial load
+            if (isFirstSnapshot.current) {
+              isFirstSnapshot.current = false;
+            } else if (onNewDataRef.current) {
+              onNewDataRef.current(data);
+            }
+
             setLatestReading(data);
             setError(null);
           } else {
@@ -82,7 +93,7 @@ export const useRealtimeLatestReading = (ipalId) => {
           console.error("❌ Firestore listener error:", err);
           setError(err.message);
           setIsListening(false);
-        }
+        },
       );
 
       // Cleanup on unmount

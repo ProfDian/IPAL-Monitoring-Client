@@ -9,7 +9,7 @@
  * const { activeAlerts, alertCount, isListening } = useRealtimeAlerts(ipalId);
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   collection,
   query,
@@ -26,12 +26,16 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
     statusFilter = "active", // 'active' | 'all' | 'acknowledged' | 'resolved'
     severityFilter = null, // 'critical' | 'high' | 'medium' | 'low' (for filtering)
     priorityOnly = true, // OPTIMIZED: Only fetch critical/high by default
+    onNewAlert = null, // Callback when a NEW alert arrives (not initial load)
   } = options;
 
   const [activeAlerts, setActiveAlerts] = useState([]);
   const [alertCount, setAlertCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState(null);
+  const isFirstSnapshot = useRef(true);
+  const onNewAlertRef = useRef(onNewAlert);
+  onNewAlertRef.current = onNewAlert;
 
   useEffect(() => {
     if (!ipalId) {
@@ -40,6 +44,7 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
     }
 
     console.log(`🔥 Starting Firestore listener for IPAL ${ipalId} alerts...`);
+    isFirstSnapshot.current = true;
     setIsListening(true);
     setError(null);
 
@@ -47,7 +52,7 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
       // Build query
       let q = query(
         collection(db, "alerts"),
-        where("ipal_id", "==", parseInt(ipalId))
+        where("ipal_id", "==", parseInt(ipalId)),
       );
 
       // Filter by status if specified
@@ -85,21 +90,27 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
             latest: alerts[0]?.type || "none",
           });
 
+          // Detect new alerts (compare IDs)
+          if (isFirstSnapshot.current) {
+            isFirstSnapshot.current = false;
+          } else {
+            const prevIds = new Set(activeAlerts.map((a) => a.id));
+            const newAlerts = alerts.filter((a) => !prevIds.has(a.id));
+            if (newAlerts.length > 0 && onNewAlertRef.current) {
+              console.log(`🚨 ${newAlerts.length} NEW ALERT(S) DETECTED!`);
+              onNewAlertRef.current(newAlerts[0]);
+            }
+          }
+
           setActiveAlerts(alerts);
           setAlertCount(alerts.length);
           setError(null);
-
-          // Optional: Trigger notification jika ada alert baru
-          if (alerts.length > alertCount && alertCount > 0) {
-            console.log("🚨 NEW ALERT DETECTED!");
-            // Bisa trigger notification popup atau sound di sini
-          }
         },
         (err) => {
           console.error("❌ Firestore alerts listener error:", err);
           setError(err.message);
           setIsListening(false);
-        }
+        },
       );
 
       // Cleanup on unmount
@@ -125,7 +136,7 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
   const violationAlerts = activeAlerts.filter((a) => a.type === "VIOLATION");
   const sensorAlerts = activeAlerts.filter((a) => a.type === "SENSOR_FAULT");
   const effectivenessAlerts = activeAlerts.filter(
-    (a) => a.type?.includes("EFFECTIVENESS") || a.type?.includes("REDUCTION")
+    (a) => a.type?.includes("EFFECTIVENESS") || a.type?.includes("REDUCTION"),
   );
 
   return {

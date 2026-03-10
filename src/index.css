@@ -249,4 +249,13 @@
   .animation-delay-4000 {
     animation-delay: 4s;
   }
+
+  @keyframes shrinkWidth {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
 }
