@@ -36,6 +36,7 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
   const isFirstSnapshot = useRef(true);
   const onNewAlertRef = useRef(onNewAlert);
   onNewAlertRef.current = onNewAlert;
+  const knownAlertIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!ipalId) {
@@ -45,6 +46,7 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
 
     console.log(`🔥 Starting Firestore listener for IPAL ${ipalId} alerts...`);
     isFirstSnapshot.current = true;
+    knownAlertIdsRef.current = new Set();
     setIsListening(true);
     setError(null);
 
@@ -90,12 +92,17 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
             latest: alerts[0]?.type || "none",
           });
 
-          // Detect new alerts (compare IDs)
+          // Detect genuinely new alerts (not just re-ordered by resolve/acknowledge)
           if (isFirstSnapshot.current) {
             isFirstSnapshot.current = false;
+            // Seed known IDs from initial snapshot
+            alerts.forEach((a) => knownAlertIdsRef.current.add(a.id));
           } else {
-            const prevIds = new Set(activeAlerts.map((a) => a.id));
-            const newAlerts = alerts.filter((a) => !prevIds.has(a.id));
+            const newAlerts = alerts.filter(
+              (a) => !knownAlertIdsRef.current.has(a.id),
+            );
+            // Update known IDs with current snapshot
+            alerts.forEach((a) => knownAlertIdsRef.current.add(a.id));
             if (newAlerts.length > 0 && onNewAlertRef.current) {
               console.log(`🚨 ${newAlerts.length} NEW ALERT(S) DETECTED!`);
               onNewAlertRef.current(newAlerts[0]);
