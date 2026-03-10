@@ -36,7 +36,6 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
   const isFirstSnapshot = useRef(true);
   const onNewAlertRef = useRef(onNewAlert);
   onNewAlertRef.current = onNewAlert;
-  const knownAlertIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!ipalId) {
@@ -46,7 +45,6 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
 
     console.log(`🔥 Starting Firestore listener for IPAL ${ipalId} alerts...`);
     isFirstSnapshot.current = true;
-    knownAlertIdsRef.current = new Set();
     setIsListening(true);
     setError(null);
 
@@ -92,20 +90,33 @@ export const useRealtimeAlerts = (ipalId, options = {}) => {
             latest: alerts[0]?.type || "none",
           });
 
-          // Detect genuinely new alerts (not just re-ordered by resolve/acknowledge)
+          // Only trigger toast for genuinely NEW alerts (created in the last 60s)
+          // This avoids false triggers when resolve/acknowledge causes an older
+          // alert to enter the limited query window.
           if (isFirstSnapshot.current) {
             isFirstSnapshot.current = false;
-            // Seed known IDs from initial snapshot
-            alerts.forEach((a) => knownAlertIdsRef.current.add(a.id));
-          } else {
-            const newAlerts = alerts.filter(
-              (a) => !knownAlertIdsRef.current.has(a.id),
-            );
-            // Update known IDs with current snapshot
-            alerts.forEach((a) => knownAlertIdsRef.current.add(a.id));
-            if (newAlerts.length > 0 && onNewAlertRef.current) {
-              console.log(`🚨 ${newAlerts.length} NEW ALERT(S) DETECTED!`);
-              onNewAlertRef.current(newAlerts[0]);
+          } else if (onNewAlertRef.current) {
+            const now = Date.now();
+            const addedDocs = snapshot
+              .docChanges()
+              .filter((change) => change.type === "added");
+
+            for (const change of addedDocs) {
+              const alertData = { id: change.doc.id, ...change.doc.data() };
+              const createdAt = alertData.created_at?.toDate?.()
+                ? alertData.created_at.toDate().getTime()
+                : alertData.created_at?.seconds
+                  ? alertData.created_at.seconds * 1000
+                  : typeof alertData.created_at === "string"
+                    ? new Date(alertData.created_at).getTime()
+                    : 0;
+
+              // Only show toast if alert was created within the last 60 seconds
+              if (createdAt > 0 && now - createdAt < 60000) {
+                console.log(`🚨 NEW ALERT DETECTED:`, alertData.id);
+                onNewAlertRef.current(alertData);
+                break; // Only show one toast at a time
+              }
             }
           }
 
