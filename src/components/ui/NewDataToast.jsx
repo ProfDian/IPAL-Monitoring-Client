@@ -96,7 +96,7 @@ const NewDataToast = ({ data, onDismiss, autoDismiss = 10000 }) => {
             </div>
             <div>
               <p className="text-xs font-bold text-gray-900">
-                Data Baru Diterima
+                New Data Received
               </p>
               <p className="text-[10px] text-gray-500">
                 IPAL {data.ipal_id} &bull; {timestamp}
@@ -139,7 +139,7 @@ const NewDataToast = ({ data, onDismiss, autoDismiss = 10000 }) => {
               />
               <SensorPill
                 icon={<Thermometer className="w-3 h-3" />}
-                label="Suhu"
+                label="Temp"
                 value={`${outlet.temperature?.toFixed(1)}`}
                 unit="°C"
                 warn={outlet.temperature > 40}
@@ -160,7 +160,7 @@ const NewDataToast = ({ data, onDismiss, autoDismiss = 10000 }) => {
             onClick={handleViewDetail}
             className="flex items-center gap-1 text-[11px] font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
           >
-            Lihat Detail
+            View Details
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>

@@ -69,7 +69,7 @@ const DashboardLayout = () => {
         onDismiss={() => setNewDataToast(null)}
       />
 
-      {/* Alert Modal — requires acknowledgment */}
+      {/* Alert Toast — slides in from right */}
       <AlertModal alert={alertModal} onDismiss={() => setAlertModal(null)} />
 
       {/* FCM Foreground Toast Notification (fallback for non-alert FCM) */}

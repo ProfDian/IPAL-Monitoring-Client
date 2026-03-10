@@ -34,18 +34,28 @@ const SEVERITY_CONFIG = {
 };
 
 /**
- * Modal that appears when a new alert/violation is detected
- * Requires user acknowledgment (no auto-dismiss)
+ * Toast notification for new alerts/violations
+ * Slides in from the right, auto-dismisses after 12 seconds
  */
-const AlertModal = ({ alert, onDismiss }) => {
+const AlertModal = ({ alert, onDismiss, autoDismiss = 12000 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!alert) return;
-    const timer = setTimeout(() => setIsVisible(true), 50);
-    return () => clearTimeout(timer);
+
+    const enterTimer = setTimeout(() => setIsVisible(true), 50);
+
+    let dismissTimer;
+    if (autoDismiss > 0) {
+      dismissTimer = setTimeout(() => handleDismiss(), autoDismiss);
+    }
+
+    return () => {
+      clearTimeout(enterTimer);
+      if (dismissTimer) clearTimeout(dismissTimer);
+    };
   }, [alert]);
 
   const handleDismiss = () => {
@@ -54,7 +64,7 @@ const AlertModal = ({ alert, onDismiss }) => {
       setIsVisible(false);
       setIsLeaving(false);
       onDismiss?.();
-    }, 250);
+    }, 300);
   };
 
   const handleViewAlerts = () => {
@@ -68,136 +78,121 @@ const AlertModal = ({ alert, onDismiss }) => {
   const config = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.high;
   const Icon = config.icon;
 
-  const modal = (
+  const toast = (
     <div
-      className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 transition-all duration-250 ${
+      className={`fixed top-20 right-4 z-[9997] w-[380px] max-w-[calc(100vw-2rem)] transition-all duration-300 ease-out ${
         isVisible && !isLeaving
-          ? "opacity-100"
-          : "opacity-0 pointer-events-none"
+          ? "translate-x-0 opacity-100"
+          : "translate-x-full opacity-0"
       }`}
     >
-      {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-250 ${
-          isVisible && !isLeaving ? "opacity-100" : "opacity-0"
-        }`}
-        onClick={handleDismiss}
-      />
-
-      {/* Card */}
-      <div
-        className={`relative w-full max-w-md transform transition-all duration-300 ${
-          isVisible && !isLeaving
-            ? "scale-100 translate-y-0"
-            : "scale-95 translate-y-4"
-        }`}
+        className={`bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border ${config.border} overflow-hidden`}
       >
-        <div
-          className={`bg-white rounded-2xl shadow-2xl overflow-hidden border ${config.border}`}
-        >
-          {/* Top gradient bar */}
-          <div className={`h-1.5 bg-gradient-to-r ${config.gradient}`} />
+        {/* Severity bar */}
+        <div className={`h-1.5 bg-gradient-to-r ${config.gradient}`} />
 
-          {/* Close button */}
-          <button
-            onClick={handleDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors z-10"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="p-6">
-            {/* Icon + severity badge */}
-            <div className="flex flex-col items-center text-center mb-4">
-              <div
-                className={`p-3 rounded-2xl ${config.iconBg} ${config.pulse} mb-3`}
-              >
-                <Icon className="w-8 h-8" />
-              </div>
-              <span
-                className={`inline-block px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider text-white bg-gradient-to-r ${config.gradient}`}
-              >
-                {config.label}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-lg font-bold text-gray-900 text-center mb-1">
-              Peringatan Baru!
-            </h3>
-            <p className="text-sm text-gray-500 text-center mb-4">
-              IPAL {alert.ipal_id}
-            </p>
-
-            {/* Alert details */}
+        {/* Header */}
+        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <div
-              className={`rounded-xl p-4 ${config.bg} ${config.border} border mb-4`}
+              className={`p-1.5 rounded-lg ${config.iconBg} ${config.pulse}`}
             >
-              <p className="text-sm font-semibold text-gray-900 mb-2">
-                {alert.message || alert.rule || "Parameter di luar baku mutu"}
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {alert.parameter && (
-                  <div>
-                    <span className="text-gray-500">Parameter</span>
-                    <p className="font-semibold text-gray-800 capitalize">
-                      {alert.parameter}
-                    </p>
-                  </div>
-                )}
-                {alert.value != null && (
-                  <div>
-                    <span className="text-gray-500">Nilai</span>
-                    <p className="font-semibold text-gray-800">
-                      {typeof alert.value === "number"
-                        ? alert.value.toFixed(2)
-                        : alert.value}
-                    </p>
-                  </div>
-                )}
-                {alert.threshold != null && (
-                  <div>
-                    <span className="text-gray-500">Batas</span>
-                    <p className="font-semibold text-gray-800">
-                      {alert.threshold}
-                    </p>
-                  </div>
-                )}
-                {alert.location && (
-                  <div>
-                    <span className="text-gray-500">Lokasi</span>
-                    <p className="font-semibold text-gray-800 capitalize">
-                      {alert.location}
-                    </p>
-                  </div>
-                )}
-              </div>
+              <Icon className="w-3.5 h-3.5" />
             </div>
+            <div>
+              <p className="text-xs font-bold text-gray-900">New Alert</p>
+              <p className="text-[10px] text-gray-500">IPAL {alert.ipal_id}</p>
+            </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleDismiss}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Tutup
-              </button>
-              <button
-                onClick={handleViewAlerts}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-gradient-to-r ${config.gradient} hover:shadow-lg transition-all flex items-center justify-center gap-1.5`}
-              >
-                Lihat Alert
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider text-white bg-gradient-to-r ${config.gradient}`}
+            >
+              {config.label}
+            </span>
+            <button
+              onClick={handleDismiss}
+              className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Alert details */}
+        <div className="px-4 pb-2">
+          <div
+            className={`rounded-lg p-2.5 ${config.bg} ${config.border} border`}
+          >
+            <p className="text-xs font-semibold text-gray-900 mb-1.5 line-clamp-2">
+              {alert.message || alert.rule || "Parameter exceeded threshold"}
+            </p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
+              {alert.parameter && (
+                <div>
+                  <span className="text-gray-500">Parameter: </span>
+                  <span className="font-semibold text-gray-800 capitalize">
+                    {alert.parameter}
+                  </span>
+                </div>
+              )}
+              {alert.value != null && (
+                <div>
+                  <span className="text-gray-500">Value: </span>
+                  <span className="font-semibold text-gray-800">
+                    {typeof alert.value === "number"
+                      ? alert.value.toFixed(2)
+                      : alert.value}
+                  </span>
+                </div>
+              )}
+              {alert.threshold != null && (
+                <div>
+                  <span className="text-gray-500">Threshold: </span>
+                  <span className="font-semibold text-gray-800">
+                    {alert.threshold}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="px-4 pb-3 flex items-center justify-between">
+          <p className="text-[10px] text-gray-400">
+            Severity:{" "}
+            <span className="font-semibold capitalize text-gray-600">
+              {config.label.toLowerCase()}
+            </span>
+          </p>
+          <button
+            onClick={handleViewAlerts}
+            className="flex items-center gap-1 text-[11px] font-medium text-red-600 hover:text-red-700 transition-colors"
+          >
+            View Alerts
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Progress bar for auto-dismiss */}
+        {autoDismiss > 0 && (
+          <div className="h-0.5 bg-gray-100">
+            <div
+              className="h-full bg-red-400/60 origin-left"
+              style={{
+                animation: `shrinkWidth ${autoDismiss}ms linear forwards`,
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 
-  return createPortal(modal, document.body);
+  return createPortal(toast, document.body);
 };
 
 export default AlertModal;

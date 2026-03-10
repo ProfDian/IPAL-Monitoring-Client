@@ -268,7 +268,8 @@ const Dashboard = () => {
       };
     })
     .filter((d) => d !== null)
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sort chronologically
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+    .slice(-24); // Ensure max 24 data points
 
   // Calculate summary from quality chart data
   const qualitySummary =
