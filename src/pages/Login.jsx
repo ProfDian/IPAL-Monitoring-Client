@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import authService from "../services/authServices";
+import { API_BASE_URL } from "../services/api";
 import { IoStatsChart } from "react-icons/io5";
 import { MdNotificationsActive, MdClose } from "react-icons/md";
 import { RiDashboardFill } from "react-icons/ri";
@@ -66,6 +67,13 @@ const Login = () => {
 
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
+
+  // Prewarm backend to reduce cold-start impact before first login request
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/`, { method: "GET" }).catch(() => {
+      // Ignore prewarm failure; normal login flow still works
+    });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
