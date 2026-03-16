@@ -32,6 +32,11 @@ const AlertGroupCard = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const isSensorAnomalyAlert = (alert) =>
+    alert?.alert_type === "SENSOR_ANOMALY" ||
+    alert?.source === "sensor_diagnostic" ||
+    alert?.location === "anomaly";
+
   // Get the highest severity in the group
   const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
   const highestSeverity = alertGroup.alerts.reduce((max, alert) => {
@@ -53,6 +58,14 @@ const AlertGroupCard = ({
   const firstAlert = alertGroup.alerts[0];
   const ipalId = firstAlert.ipal_id;
   const location = firstAlert.location || "outlet";
+  const anomalyCount = alertGroup.alerts.filter(isSensorAnomalyAlert).length;
+  const complianceCount = alertGroup.alerts.length - anomalyCount;
+  const groupLabel =
+    anomalyCount > 0 && complianceCount > 0
+      ? "Campuran"
+      : anomalyCount > 0
+        ? "Anomali Sensor"
+        : "Pelanggaran Baku Mutu";
   const allResolved = alertGroup.alerts.every((a) => a.status === "resolved");
   const allAcknowledged = alertGroup.alerts.every(
     (a) => a.status === "acknowledged" || a.status === "resolved",
@@ -142,8 +155,10 @@ const AlertGroupCard = ({
               <span className="text-gray-400">•</span>
               <span className="capitalize">{location}</span>
               <span className="text-gray-400">•</span>
+              <span className="font-medium text-gray-700">{groupLabel}</span>
+              <span className="text-gray-400">•</span>
               <span className="font-semibold text-red-600">
-                {alertGroup.alerts.length} violation
+                {alertGroup.alerts.length} alert
                 {alertGroup.alerts.length > 1 ? "s" : ""}
               </span>
             </div>
@@ -185,41 +200,69 @@ const AlertGroupCard = ({
 
                 {/* Violation Info */}
                 <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center justify-between gap-1">
-                    <h4 className="text-sm font-semibold text-gray-900">
-                      {alert.parameter?.toUpperCase()}
-                    </h4>
-                    <div className="flex space-x-1">
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${getAlertStatusColor(
-                          alert.status,
-                        )}`}
-                      >
-                        {alert.status}
-                      </span>
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${
-                          getSeverityStyles(alert.severity).badge
-                        }`}
-                      >
-                        {alert.severity}
-                      </span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const isSensorAnomaly = isSensorAnomalyAlert(alert);
+                    const sourceLabel = isSensorAnomaly
+                      ? "Anomali Sensor"
+                      : "Pelanggaran Baku Mutu";
+                    const thresholdLabel = isSensorAnomaly
+                      ? "Rentang Sensor"
+                      : "Batas Baku Mutu";
 
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">
-                    {alert.message}
-                  </p>
+                    return (
+                      <>
+                        <div className="mb-1">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${
+                              isSensorAnomaly
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {sourceLabel}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-1">
+                          <h4 className="text-sm font-semibold text-gray-900">
+                            {alert.parameter?.toUpperCase()}
+                          </h4>
+                          <div className="flex space-x-1">
+                            <span
+                              className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${getAlertStatusColor(
+                                alert.status,
+                              )}`}
+                            >
+                              {alert.status}
+                            </span>
+                            <span
+                              className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium ${
+                                getSeverityStyles(alert.severity).badge
+                              }`}
+                            >
+                              {alert.severity}
+                            </span>
+                          </div>
+                        </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                    <span className="font-medium">
-                      Value: <span className="text-red-600">{alert.value}</span>
-                    </span>
-                    <span>Threshold: {alert.threshold}</span>
-                    {alert.deviation && (
-                      <span>Deviation: +{alert.deviation}</span>
-                    )}
-                  </div>
+                        <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">
+                          {alert.message}
+                        </p>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                          <span className="font-medium">
+                            Value:{" "}
+                            <span className="text-red-600">{alert.value}</span>
+                          </span>
+                          <span>
+                            {thresholdLabel}: {alert.threshold}
+                          </span>
+                          {alert.deviation && (
+                            <span>Deviation: +{alert.deviation}</span>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}

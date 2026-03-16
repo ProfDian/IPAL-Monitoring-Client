@@ -77,6 +77,14 @@ const AlertModal = ({ alert, onDismiss, autoDismiss = 12000 }) => {
   const severity = alert.severity || "high";
   const config = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.high;
   const Icon = config.icon;
+  const isSensorAnomaly =
+    alert.alert_type === "SENSOR_ANOMALY" ||
+    alert.source === "sensor_diagnostic" ||
+    alert.location === "anomaly";
+  const sourceLabel = isSensorAnomaly
+    ? "Anomali Sensor"
+    : "Pelanggaran Baku Mutu";
+  const thresholdLabel = isSensorAnomaly ? "Rentang Sensor" : "Batas Baku Mutu";
 
   const toast = (
     <div
@@ -102,7 +110,9 @@ const AlertModal = ({ alert, onDismiss, autoDismiss = 12000 }) => {
             </div>
             <div>
               <p className="text-xs font-bold text-gray-900">New Alert</p>
-              <p className="text-[10px] text-gray-500">IPAL {alert.ipal_id}</p>
+              <p className="text-[10px] text-gray-500">
+                IPAL {alert.ipal_id} • {sourceLabel}
+              </p>
             </div>
           </div>
 
@@ -150,7 +160,7 @@ const AlertModal = ({ alert, onDismiss, autoDismiss = 12000 }) => {
               )}
               {alert.threshold != null && (
                 <div>
-                  <span className="text-gray-500">Threshold: </span>
+                  <span className="text-gray-500">{thresholdLabel}: </span>
                   <span className="font-semibold text-gray-800">
                     {alert.threshold}
                   </span>

@@ -45,7 +45,7 @@ const AlertGroupList = ({
             ? alert.created_at.toDate()
             : new Date(alert.created_at);
           return date.getTime();
-        })
+        }),
       );
       const bLatest = Math.max(
         ...b.alerts.map((alert) => {
@@ -53,7 +53,7 @@ const AlertGroupList = ({
             ? alert.created_at.toDate()
             : new Date(alert.created_at);
           return date.getTime();
-        })
+        }),
       );
       return bLatest - aLatest;
     });
@@ -134,7 +134,7 @@ const AlertGroupList = ({
           Alert Groups ({groupedAlerts.length})
         </h3>
         <p className="mt-1 text-sm text-gray-500">
-          Grouped by reading • {alerts.length} total violation
+          Grouped by reading • {alerts.length} total alert
           {alerts.length !== 1 ? "s" : ""}
         </p>
       </div>
