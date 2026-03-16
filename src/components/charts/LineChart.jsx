@@ -160,6 +160,23 @@ const LineChart = ({
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || payload.length === 0) return null;
 
+    const formatTooltipValue = (value) => {
+      if (value == null) return "N/A";
+
+      const numericValue =
+        typeof value === "number"
+          ? value
+          : typeof value === "string"
+            ? Number(value)
+            : NaN;
+
+      if (Number.isFinite(numericValue)) {
+        return numericValue.toFixed(2);
+      }
+
+      return String(value);
+    };
+
     // Format timestamp for tooltip
     let formattedTime = label;
     try {
@@ -205,7 +222,7 @@ const LineChart = ({
                 className="text-sm font-bold font-mono"
                 style={{ color: entry.color }}
               >
-                {entry.value != null ? entry.value.toFixed(2) : "N/A"}
+                {formatTooltipValue(entry.value)}
                 {unit && ` ${unit}`}
               </span>
             </div>
